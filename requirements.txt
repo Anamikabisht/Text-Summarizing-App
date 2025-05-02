@@ -1,4 +1,4 @@
-
+nltk
 streamlit
 transformers
 torch
