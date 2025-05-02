@@ -1,36 +1,42 @@
-
 import streamlit as st
 from transformers import pipeline
 import pandas as pd
+import nltk
 
-st.set_page_config(page_title="Line-wise Text Summarizer", layout="wide")
-st.title("📄 Line-wise Text Summarizer")
+# Download sentence tokenizer
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize
 
-st.markdown("Paste your full text below. Each line will be summarized individually.")
+# Load summarizer pipeline
+summarizer = pipeline("summarization")
 
-# Text input
-text = st.text_area("Enter multiline text here", height=300)
+st.set_page_config(page_title="Text Summarizer", layout="wide")
+st.title("📚 Text Summarizer App")
+st.write("Paste your full text below. Each sentence will be summarized individually.")
 
-# Summarizer pipeline
-@st.cache_resource
-def get_summarizer():
-    return pipeline("summarization")
+# Text input box
+input_text = st.text_area("Enter your text here", height=300)
 
-if st.button("Summarize Lines"):
-    if not text.strip():
+# Button to trigger summarization
+if st.button("Summarize Sentences"):
+    if input_text.strip() == "":
         st.warning("Please enter some text.")
     else:
-        summarizer = get_summarizer()
-        lines = [line.strip() for line in text.strip().split('\n') if line.strip()]
-        sent_score = {}
-
-        for i, line in enumerate(lines):
+        # Split input into sentences
+        sentences = sent_tokenize(input_text.strip())
+        
+        # Generate summaries
+        summaries = []
+        for s in sentences:
             try:
-                summary = summarizer(line, max_length=50, min_length=5, do_sample=False)[0]['summary_text']
-                sent_score[f"Line {i+1}"] = summary
-            except Exception as e:
-                sent_score[f"Line {i+1}"] = f"[Error summarizing line] {e}"
+                result = summarizer(s, max_length=50, min_length=10, do_sample=False)
+                summaries.append(result[0]['summary_text'])
+            except:
+                summaries.append("❗ Unable to summarize (too short or invalid sentence)")
 
-        # Display in table
-        df = pd.DataFrame(list(sent_score.items()), columns=["Line", "Summary"])
-        st.dataframe(df)
+        # Display in a DataFrame
+        df = pd.DataFrame({
+            "Sentence": sentences,
+            "Summary": summaries
+        })
+        st.dataframe(df, use_container_width=True)
