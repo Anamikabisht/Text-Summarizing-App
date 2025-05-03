@@ -2,9 +2,9 @@ import streamlit as st
 from transformers import pipeline
 import pandas as pd
 import nltk
-
-# Download sentence tokenizer
 nltk.download('punkt')
+nltk.download('stopwords')
+
 from nltk.tokenize import sent_tokenize
 
 # Load summarizer pipeline
